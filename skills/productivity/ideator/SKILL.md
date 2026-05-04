@@ -36,7 +36,7 @@ Stage B — Brainstorming Handoff    (driver: references/B_brainstorm_bridge.md)
 Stage C — bd Task Graph Generation (driver: references/C_bd_task_writer.md)
   Inputs: docs/business_analysis.md + docs/architecture.md.
   Preflight: verify `bd` is installed and initialized; verify code-review-graph if the project expects graph-first exploration.
-  Output: docs/prd.md + bd epics/tasks/dependencies with full worker-ready bodies + task_only_for_reference.md traceability snapshot + project-local bd/crg skills + final AGENTS.md overwrite.
+  Output: docs/prd.md + bd epics/tasks/dependencies with full worker-ready bodies + task_only_for_reference.md traceability snapshot + project-local bd/crg/bd-work skills + final AGENTS.md overwrite.
   Gate: every Fatal Flaw mitigated, every Pain mapped to a scenario, every out-of-scope honored, every executable task is bd-ready and worker-ready.
      │
      ▼
@@ -113,6 +113,10 @@ complete.
 Stage C must also create `.agents/skills/crg-manual/SKILL.md` so future agents
 prefer code-review-graph MCP tools before raw search when exploring code,
 reviewing changes, tracing dependencies, checking impact, or finding tests.
+
+Stage C must also create `.agents/skills/bd-work/SKILL.md` so future agents can
+continuously select ready bd work, execute one task at a time, verify, close,
+commit, and synchronize without depending on a globally installed skill.
 
 ## Starter prompt
 

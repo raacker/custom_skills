@@ -7,7 +7,7 @@ context.
 
 <task>
 Generate the final implementation-facing `docs/prd.md`, bd epics, bd tasks,
-dependencies, project-local bd and code-review-graph usage skills, an
+dependencies, project-local bd, bd-work, and code-review-graph usage skills, an
 `AGENTS.md` final guidance overwrite, and a traceability-only
 `task_only_for_reference.md` file.
 
@@ -72,13 +72,16 @@ Before writing artifacts or creating tasks:
 9. Create or update `.agents/skills/crg-manual/SKILL.md` in the project folder
    using the template below. This makes graph-first code exploration
    self-contained for future agents that only see the repository.
-10. Create `task_only_for_reference.md` as a read-only traceability snapshot:
+10. Create or update `.agents/skills/bd-work/SKILL.md` in the project folder
+   using the template below. This makes continuous bd task execution
+   self-contained for future agents that only see the repository.
+11. Create `task_only_for_reference.md` as a read-only traceability snapshot:
    - Include capability groups, T-###, bd IDs, scenario names, dependencies,
      and acceptance summaries.
    - State clearly at the top: "Reference only. bd is the source of truth for
      task status and execution instructions."
    - Keep the document as a traceability table, not an execution checklist.
-11. As the final artifact write, overwrite root `AGENTS.md` with the exact
+12. As the final artifact write, overwrite root `AGENTS.md` with the exact
    AGENTS.md instructions block below:
    - Create `AGENTS.md` if it does not exist.
    - Do not append to existing content and do not merge with content inserted
@@ -88,9 +91,9 @@ Before writing artifacts or creating tasks:
      because those tools may write their own AGENTS.md data.
    - The block must explain when to reference `docs/prd.md`,
      `docs/architecture.md`, and `docs/business_analysis.md`.
-   - The block must include the exact bd-manual and crg-manual skill directives
-     shown in the template.
-12. Run a verification pass:
+   - The block must include the exact bd-manual, bd-work, and crg-manual skill
+     directives shown in the template.
+13. Run a verification pass:
    - `docs/prd.md`, `docs/architecture.md`, and `docs/business_analysis.md`
      exist.
    - Every fatal flaw has a mitigation in `docs/architecture.md` or a bd task.
@@ -103,11 +106,14 @@ Before writing artifacts or creating tasks:
      as the execution source of truth.
    - `.agents/skills/crg-manual/SKILL.md` exists and points future agents to
      code-review-graph before raw search/read operations.
+   - `.agents/skills/bd-work/SKILL.md` exists and points future agents to
+     bd-native ready-task execution, verification, closing, committing, and
+     synchronization.
    - `AGENTS.md` matches the exact final guidance template and contains
      references to `docs/prd.md`, `docs/architecture.md`,
-     `docs/business_analysis.md`, bd-manual, and crg-manual.
+     `docs/business_analysis.md`, bd-manual, crg-manual, and bd-work.
    - If any check fails, halt and surface the gap.
-13. Emit bd ingestion summary and next command: `bd ready --json`.
+14. Emit bd ingestion summary and next command: `bd ready --json`.
 </steps>
 
 <prd_doc_template>
@@ -245,6 +251,7 @@ instructions. Do not update this file during task execution.
 - Use `task_only_for_reference.md` only as a traceability snapshot. bd is the
   source of truth for task status and execution instructions.
 * Use the `bd-manual` skill for bd issue tracking and session completion workflow.
+* Use the `bd-work` skill when you want an agent to continuously select ready bd work, claim it, implement it, verify it, close it, commit it, and synchronize.
 * Use the `crg-manual` skill for code-review-graph MCP usage. Always try code-review-graph before Grep/Glob/Read when exploring code, reviewing changes, tracing dependencies, checking impact, or finding tests.
 </agents_md_final_template>
 
@@ -307,6 +314,73 @@ bd is the source of truth for executable work in this repository.
 - `chore`: maintenance, tooling, dependency work.
 </project_bd_manual_skill_template>
 
+<project_bd_work_skill_template>
+---
+name: bd-work
+description: Automatically work through project-local bd ready tasks by dependency order. Use when an agent should continuously select, claim, implement, verify, close, commit, and synchronize bd tasks without manual task selection.
+---
+
+# bd Project Work Runner
+
+Work through executable bd tasks one at a time. bd is the source of truth.
+
+## Required Skills
+
+Load these project-local skills first when available:
+
+1. `bd-manual` for bd commands, priorities, dependencies, and synchronization.
+2. `crg-manual` for graph-first repository exploration.
+
+If a skill is missing, use the equivalent instructions in root `AGENTS.md`.
+
+## Workflow
+
+1. Check ready work:
+   - `bd ready --json`
+
+2. Select the highest-priority ready task:
+   - Priority order is `0`, `1`, `2`, `3`, `4`.
+   - Skip tasks with open blocking dependencies.
+
+3. Inspect and claim:
+   - `bd show <id> --json`
+   - `bd update <id> --claim --json`
+
+4. Explore before editing:
+   - Use code-review-graph MCP tools first when available.
+   - Read the task's `Read first`, `Allowed files`, `Do not touch`,
+     scenarios, acceptance criteria, and verification commands.
+
+5. Implement only the claimed task:
+   - Stay inside allowed files unless the task body explicitly permits more.
+   - Create discovered work in bd instead of expanding scope silently.
+   - Link discovered work with `--deps discovered-from:<parent-id>` when
+     supported.
+
+6. Verify:
+   - Run the task's verification commands.
+   - Run `scripts/verify.sh` if it exists.
+
+7. Close and commit only after verification passes:
+   - `bd close <id> --reason "Completed" --json`
+   - Commit code and bd state with a message explaining the problem, approach,
+     and completed task ID.
+
+8. Synchronize at session end:
+   - `git pull --rebase`
+   - `bd dolt push`
+   - `git push`
+   - `git status`
+
+## Rules
+
+- Keep bd/Dolt write commands sequential.
+- Do not edit `task_only_for_reference.md` during execution.
+- Do not maintain markdown task state outside bd.
+- Do not close tasks without verification evidence.
+- Do not revert unrelated user changes.
+</project_bd_work_skill_template>
+
 <project_crg_manual_skill_template>
 ---
 name: crg-manual
@@ -361,11 +435,13 @@ the needed detail.
   carries its own bd workflow instructions.
 - Create `.agents/skills/crg-manual/SKILL.md` during Stage C so the project
   carries its own code-review-graph workflow instructions.
+- Create `.agents/skills/bd-work/SKILL.md` during Stage C so the project
+  carries its own continuous bd execution workflow instructions.
 - Create or update `docs/prd.md` during Stage C. Keep `docs/business_analysis.md`
   and `docs/architecture.md` in `docs/`.
 - Overwrite root `AGENTS.md` as the final Stage C artifact so future agents know
-  when to reference PRD, architecture, business analysis, bd-manual, and
-  crg-manual, and so setup-tool AGENTS.md additions are removed.
+  when to reference PRD, architecture, business analysis, bd-manual,
+  crg-manual, and bd-work, and so setup-tool AGENTS.md additions are removed.
 - Keep bd commands sequential. Embedded bd/Dolt can lock on parallel writers.
 - Use `bd dolt commit` and `bd dolt push` after mutating task graph state.
 - Root-level DESIGN.md is reserved for visual/UI/brand rules. Never read or
@@ -381,6 +457,7 @@ Report:
 - Dependencies linked.
 - `.agents/skills/bd-manual/SKILL.md` path.
 - `.agents/skills/crg-manual/SKILL.md` path.
+- `.agents/skills/bd-work/SKILL.md` path.
 - `AGENTS.md` overwrite status.
 - `task_only_for_reference.md` path.
 - Verification gaps, if any.
