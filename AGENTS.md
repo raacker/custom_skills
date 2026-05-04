@@ -15,3 +15,4 @@
 - No laziness: Find root causes. No temporary fixes. Senior developer standards.
 - Minimal impact: Changes should only touch what's necessary. Avoid introducing bugs.
 - Simplicity First: Make every change as simple as possible. Impact minimal code.
+- Test matters: Always follow Red/Green TDD method when implementing features.

@@ -1,0 +1,3 @@
+[submodule "skills/ideator"]
+	path = skills/ideator
+	url = https://github.com/raacker/ideator.git
