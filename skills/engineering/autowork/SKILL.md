@@ -1,5 +1,5 @@
 ---
-name: bd-work
+name: autowork
 description: Automatically work through bd (Beads/Dolt) ready tasks by dependency order. Use when you want to continuously work on available bd tasks without manual task selection: check dependencies, claim work, execute one task at a time, verify, close, commit, and synchronize.
 ---
 
@@ -13,9 +13,6 @@ Load these skills first when available:
 
 1. `bd-manual` - bd commands, priorities, dependencies, and synchronization.
 2. `crg-manual` - graph-first repository exploration.
-
-If either skill is missing, continue only if the repository has equivalent
-project-local instructions. State the fallback briefly.
 
 ## Workflow
 
@@ -58,8 +55,7 @@ Then implement the claimed task according to its bd body:
 
 ### Phase 5: Verify, Close, and Commit
 
-1. Run the task's verification commands.
-2. If the repository has `scripts/verify.sh`, run it before closing the task.
+1. Run the task's verification commands, or `scripts/verify.sh` which silently ends if there is no error.
 3. If verification passes:
    - Close the task with `bd close <id> --reason "Completed" --json`.
    - Commit code and bd state with a meaningful message.
@@ -74,7 +70,6 @@ Default:
 
 ```bash
 git pull --rebase
-bd dolt push
 git push
 git status
 ```
