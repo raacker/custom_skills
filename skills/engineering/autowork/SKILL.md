@@ -1,18 +1,11 @@
 ---
 name: autowork
-description: Automatically work through bd (Beads/Dolt) ready tasks by dependency order. Use when you want to continuously work on available bd tasks without manual task selection: check dependencies, claim work, execute one task at a time, verify, close, commit, and synchronize.
+description: "Automatically work through bd (Beads/Dolt) ready tasks by dependency order. Use when you want to continuously work on available bd tasks without manual task selection: check dependencies, claim work, execute one task at a time, verify, close, commit, and synchronize."
 ---
 
 # bd-Work: Continuous Task Execution Skill
 
 This skill works through available bd tasks from selection to verification.
-
-## Required Skills
-
-Load these skills first when available:
-
-1. `bd-manual` - bd commands, priorities, dependencies, and synchronization.
-2. `crg-manual` - graph-first repository exploration.
 
 ## Workflow
 
