@@ -59,6 +59,8 @@ if [ ! -f "$WORKFLOW" ]; then
   exit 1
 fi
 
+(cd "$TARGET_ROOT" && bd init --role maintainer --skip-agents --skip-hooks)
+
 if [ "$FORCE" -eq 1 ] && [ -e "$DEST" ]; then
   rm -rf "$DEST"
   echo "removed $DEST"
