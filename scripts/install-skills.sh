@@ -3,10 +3,30 @@ set -euo pipefail
 
 # Links all skills in this repository into a local repository's .agents/skills
 # directory, then appends AGENTS_WORKFLOW.md to that repository's AGENTS.md.
+# With --force, recreates .agents/skills and overwrites AGENTS.md.
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 WORKFLOW="$REPO/AGENTS_WORKFLOW.md"
 DEFAULT_TARGET="$PWD"
+FORCE=0
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --force)
+      FORCE=1
+      ;;
+    -h|--help)
+      echo "usage: $0 [--force]" >&2
+      exit 0
+      ;;
+    *)
+      echo "error: unknown option: $1" >&2
+      echo "usage: $0 [--force]" >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
 
 printf "Install skills into which repository? [%s] " "$DEFAULT_TARGET"
 IFS= read -r TARGET_ROOT || TARGET_ROOT=""
@@ -33,6 +53,16 @@ TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd)"
 AGENTS_DIR="$TARGET_ROOT/.agents"
 DEST="$AGENTS_DIR/skills"
 AGENTS="$TARGET_ROOT/AGENTS.md"
+
+if [ ! -f "$WORKFLOW" ]; then
+  echo "error: missing workflow file: $WORKFLOW" >&2
+  exit 1
+fi
+
+if [ "$FORCE" -eq 1 ] && [ -e "$DEST" ]; then
+  rm -rf "$DEST"
+  echo "removed $DEST"
+fi
 
 # If .agents/skills is a symlink that resolves into this repo, we'd end up
 # writing the per-skill symlinks back into this repo's own skills/ tree.
@@ -63,14 +93,12 @@ while IFS= read -r -d '' skill_md; do
   echo "linked $name -> $src"
 done
 
-if [ ! -f "$WORKFLOW" ]; then
-  echo "error: missing workflow file: $WORKFLOW" >&2
-  exit 1
-fi
-
 workflow_size="$(wc -c < "$WORKFLOW" | tr -d ' ')"
 
-if [ ! -f "$AGENTS" ]; then
+if [ "$FORCE" -eq 1 ]; then
+  cp "$WORKFLOW" "$AGENTS"
+  echo "overwrote AGENTS_WORKFLOW.md -> $AGENTS"
+elif [ ! -f "$AGENTS" ]; then
   cp "$WORKFLOW" "$AGENTS"
   echo "copied AGENTS_WORKFLOW.md -> $AGENTS"
 elif

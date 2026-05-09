@@ -39,4 +39,21 @@ test -L "$EXISTING/.agents/skills/tdd"
 grep -q "Existing instructions" "$EXISTING/AGENTS.md"
 tail -c "$workflow_size" "$EXISTING/AGENTS.md" | cmp -s "$REPO/AGENTS_WORKFLOW.md" -
 
+FORCE="$TMPDIR/force-project"
+mkdir -p "$FORCE/.agents/skills/stale-dir"
+printf 'Stale instructions\n' >"$FORCE/AGENTS.md"
+printf 'stale skill\n' >"$FORCE/.agents/skills/stale-file"
+
+cd "$TMPDIR"
+printf '%s\n' "$FORCE" | "$REPO/scripts/install-skills.sh" --force >"$TMPDIR/install-skills-force.out"
+
+grep -q "removed $FORCE/.agents/skills" "$TMPDIR/install-skills-force.out"
+grep -q "overwrote AGENTS_WORKFLOW.md -> $FORCE/AGENTS.md" "$TMPDIR/install-skills-force.out"
+test -d "$FORCE/.agents"
+test -d "$FORCE/.agents/skills"
+test ! -e "$FORCE/.agents/skills/stale-dir"
+test ! -e "$FORCE/.agents/skills/stale-file"
+test -L "$FORCE/.agents/skills/tdd"
+cmp -s "$REPO/AGENTS_WORKFLOW.md" "$FORCE/AGENTS.md"
+
 echo "install-skills test passed"
