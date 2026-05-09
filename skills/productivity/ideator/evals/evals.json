@@ -1,0 +1,53 @@
+{
+  "skill_name": "ideator",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have an idea for an app that helps people become more confident in social situations. Help me turn it into a product.",
+      "expected_output": "The skill starts Stage A in English, asks for the one-line idea and target customer if missing, then grills one question at a time instead of drafting. It should push toward concrete personas, pain, current workaround, willingness-to-engage, social approval/freedom, and avoid accepting vague answers.",
+      "files": [],
+      "assertions": [
+        "The response is written in English.",
+        "The response asks exactly one blocking question at a time.",
+        "The response does not produce docs/business_analysis.md or a full draft immediately.",
+        "The response asks for or narrows toward a concrete target customer/persona.",
+        "The response mentions or moves toward evaluating pain, current workaround, willingness-to-engage, social approval, and freedom."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We already have docs/business_analysis.md approved. Please write the PRD.",
+      "expected_output": "The skill reads the approved business analysis, audits for ambiguity before drafting, refuses to infer missing decisions, and produces or requests enough detail for docs/prd.md with Success Criteria, MVP Validation Contract, Scope, UX Flow and States, Requirements, Scenarios, Assumption Coverage, and Approval.",
+      "files": [
+        "docs/business_analysis.md"
+      ],
+      "assertions": [
+        "The response is written in English.",
+        "The response verifies that docs/business_analysis.md is approved before proceeding.",
+        "The response refuses to infer unresolved PRD decisions.",
+        "The PRD output or requested PRD structure includes Success Criteria.",
+        "The PRD output or requested PRD structure includes UX Flow and States.",
+        "The PRD output or requested PRD structure includes Approval with Approve, Revise, or Return to Stage A."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Now create implementation tasks from the PRD and architecture.",
+      "expected_output": "The skill treats task generation as optional Stage D, requires create-task, reads docs/prd.md and docs/architecture.md, builds a coverage matrix from PRD Success Criteria to architecture refs and T-### tasks, creates one epic per capability, and emits create-task-compatible task bodies with Beads, dependencies, PRD refs, architecture refs, scenarios, allowed files, do-not-touch paths, verification commands, and out-of-scope guards.",
+      "files": [
+        "docs/prd.md",
+        "docs/architecture.md",
+        "docs/business_analysis.md"
+      ],
+      "assertions": [
+        "The response is written in English.",
+        "The response requires the create-task skill and fails rather than continuing if it is unavailable.",
+        "The response reads or requires docs/prd.md and docs/architecture.md before task generation.",
+        "The response includes a coverage matrix linking PRD Success Criteria to scenarios, architecture refs, capabilities, and T-### tasks.",
+        "The response creates or plans one epic per capability.",
+        "Each task body includes Beads, Depends on, Goal, Context, Scenarios, Read first, Allowed files, Do not touch, Implementation notes, Acceptance, Verification commands, and Out-of-scope guard.",
+        "Tasks are independently executable by one implementer and include explicit dependencies."
+      ]
+    }
+  ]
+}

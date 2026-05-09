@@ -1,94 +1,148 @@
 ---
 name: ideator
-description: 4-stage pipeline that takes a raw startup or product idea through validation, a production-MVP PRD, approved architecture, and create-task-backed task creation. Use whenever the user wants to validate, pressure-test, write a PRD for, or turn into actionable specs/tasks a product, startup, feature, or MVP idea, even if they do not explicitly ask for this skill. Trigger on phrases like "write a PRD", "from idea to PRD", "pressure test idea", "fatal flaw analysis", "painkiller validation", "build PRD from idea", or "create tasks".
+description: Turn a raw startup, product, feature, or MVP idea into market-tested product direction, business analysis, PRD, and architecture, with optional post-architecture task planning. Use this whenever the user wants to validate an idea, pressure-test market demand, find paying personas, design an MVP, write a PRD, compare product directions, decide whether an idea is worth building, or generate tasks from an approved PRD and architecture, even if they only say "I have an idea", "help me plan this", or "turn this into tasks."
 ---
 
 # ideator
 
-A staged workflow that converts a one-line startup idea into a validated production-MVP definition and a task graph created through the `create-task` skill. Four stages, hard gates between them, traceability from business validation to PRD scenario to implementation task.
+Drive a staged, relentless idea-to-product interrogation. The goal is not to
+produce tasks first. The goal is to remove ambiguity until the user can decide
+whether an idea is worth building, then define the smallest production-quality
+MVP that can test the riskiest market assumption.
+
+## Primary outcomes
+
+Produce these artifacts:
+
+- `docs/business_analysis.md` — market, persona pain, willingness-to-engage,
+  differentiation, assumption audit, and proceed/kill decision.
+- `docs/prd.md` — implementation-facing MVP requirements, scenarios, non-goals,
+  validation contract, success criteria, and acceptance signals.
+- `docs/architecture.md` — approved technical/product architecture for the MVP.
+
+Task generation is optional follow-up work. Do not make task creation the default
+success condition for this skill. When requested, generate tasks only after
+reading the approved PRD and architecture, then keep generating or revising tasks
+until every PRD success criterion is covered.
 
 ## When this fires
 
-- User has a raw idea or product concept and wants it validated, designed, and turned into actionable specs.
-- User mentions any of: pressure-testing an idea, finding fatal flaws, validating a problem, mapping competition, writing a PRD, generating implementation tasks, brainstorming architecture for a new product.
-- User has already produced `docs/business_analysis.md` or `docs/architecture.md` and wants to continue mid-pipeline.
+Use this skill when the user wants to:
 
-If the user is asking about visual/UI/brand design rules (root `DESIGN.md` territory), this skill does not apply.
+- Validate, refine, or pressure-test a startup/product/feature idea.
+- Find the real customer, painful use case, current workaround, or first MVP.
+- Decide whether an idea is a painkiller or vitamin.
+- Explore willingness to engage, market pull, social approval, freedom, or status
+  dynamics behind demand.
+- Write a business analysis, PRD, MVP scope, or architecture.
+- Compare multiple product directions and converge on one.
 
-## The four stages
+If the user only wants visual/UI/brand rules, this skill does not apply.
+
+## Pipeline
 
 ```
-[idea + customer]
-     │
-     ▼
-Stage A — Business Analysis        (driver: references/A_business_analyzer.md)
-  Combines PG-style pressure test + customer discovery + competition map.
+[raw idea + target customer]
+     |
+     v
+Stage A — Business Analysis
+  Driver: references/A_business_analyzer.md
   Output: docs/business_analysis.md
-  Gate: §6 Decision must be YES or CONDITIONAL. KILL halts the pipeline.
-     │
-     ▼
-Stage B — Brainstorming Handoff    (driver: references/B_brainstorm_bridge.md)
-  Use the brainstorming skill with §5 Handoff as seeded context.
-  Output: docs/architecture.md ("how it works")
-  Gate: explicit user approval after the brainstorming skill's design review.
-     │
-     ▼
-Stage C — PRD + Task Graph Generation (driver: references/C_bd_task_writer.md)
-  Inputs: docs/business_analysis.md + docs/architecture.md.
-  Output: docs/prd.md + docs/task_only_for_reference.md + create-task ingestion of every listed epic/task.
-  Gate: every Fatal Flaw mitigated, every Pain mapped to a scenario, every production-MVP requirement covered, every out-of-scope honored, every task in docs/task_only_for_reference.md created through create-task.
-     │
-     ▼
-Stage D — Execute
-  Execute the generated task graph using the repository's task-execution workflow.
+  Gate: §8 Decision must be YES or CONDITIONAL. NO/KILL halts.
+     |
+     v
+Stage B — PRD
+  Driver: references/B_prd_writer.md
+  Input: docs/business_analysis.md
+  Output: docs/prd.md
+  Gate: user approval of MVP scope, requirements, scenarios, and non-goals.
+     |
+     v
+Stage C — Architecture
+  Driver: references/C_architecture_designer.md
+  Inputs: docs/business_analysis.md + docs/prd.md
+  Output: docs/architecture.md
+  Gate: user approval of production-MVP architecture.
+     |
+     v
+Optional Stage D — Task Planning
+  Driver: references/D_task_planner.md
+  Inputs: docs/prd.md + docs/architecture.md
+  Output: docs/task_plan.md plus bd epics/tasks through create-task
+  Gate: every PRD success criterion, scenario, and architecture-critical path is covered.
 ```
 
-## How to drive the pipeline
+## Operating rules
 
-1. **Locate the user in the pipeline first.**
-   - No state files? Start at Stage A. Read `references/0_orchestrator.md` for the master flow, then read `references/A_business_analyzer.md` and follow it.
-   - `docs/business_analysis.md` exists with §6 = YES/CONDITIONAL? Resume at Stage B with `references/B_brainstorm_bridge.md`.
-   - `docs/architecture.md` also exists and brainstorming approval was given? Resume at Stage C with `references/C_bd_task_writer.md`.
-   - Tasks for the change already exist? Stage D — follow the repository's execution workflow.
+1. Locate the user in the pipeline first.
+   - No state files: start Stage A.
+   - `docs/business_analysis.md` exists with §8 YES/CONDITIONAL: continue Stage B.
+   - `docs/prd.md` exists and is approved: continue Stage C.
+   - All three artifacts exist: summarize readiness and ask whether to revise,
+     create tasks, or execute.
+2. Grill relentlessly. Ask questions one at a time, but keep asking until every
+   decision needed for the next artifact is explicit.
+3. Assume a greenfield product unless the user explicitly provides an existing
+   codebase. Use local file reads only to inspect this skill's state artifacts.
+4. Do not silently advance through gates. State the verdict at each boundary.
+5. Keep state explicit. Later stages read the artifact files, not hidden chat
+   context.
+6. Treat `DESIGN.md` as reserved for visual/UI/brand rules. Never write it.
+7. Do not create quick drafts, assumption-based PRDs, or placeholder
+   architecture. If information is missing, ask. The final PRD must leave no
+   decision that an implementer would need to guess.
 
-2. **Honor the gates.** Each stage's gate is in its driver file. Never silently advance past a gate. Surface the verdict explicitly.
+## Conversation contract
 
-3. **Treat state files as the only inter-stage contract.** Stage B reads only §5 Handoff of `docs/business_analysis.md`, not the whole document. Stage C must synthesize the final implementation-facing PRD at `docs/prd.md` from `docs/business_analysis.md` and `docs/architecture.md`, then use `docs/prd.md` as the primary product requirements source for task generation. No implicit context carry.
+- Use English for all interview questions, reasoning summaries, and artifact
+  files, regardless of the user's language, unless the user explicitly requests a
+  different artifact language after acknowledging the tradeoff.
+- One question at a time.
+- For each question, provide the recommended answer or decision.
+- Challenge vague answers immediately.
+- Resolve dependencies in order: persona -> pain -> current behavior -> wallet
+  opening -> instinctive demand -> differentiation -> feasibility -> MVP.
+- Compare up to 3 personas, then force convergence to exactly 1 primary persona
+  before PRD.
+- Do not proceed to the next stage while material unknowns remain.
+- Separate evidence from assumptions. Do not label anything as evidence unless
+  it comes from real user interviews, observed behavior, usage data, sales
+  conversations, or other concrete external signals.
+- If the user asks to skip interrogation, refuse the shortcut and continue with
+  the next blocking question.
 
-4. **Naming convention.**
-   - `docs/business_analysis.md` — Stage A output, the business validation source.
-   - `docs/architecture.md` — Stage B output, the approved "how".
-   - `docs/prd.md` — Stage C final implementation-facing PRD synthesized from Stage A and Stage B.
-   - `docs/task_only_for_reference.md` — Stage C traceability snapshot and create-task ingestion manifest. It is not a task state source.
-   - Root `DESIGN.md` (all caps) — RESERVED for visual/UI/brand rules. The pipeline never reads or writes here.
+## Evaluation model
 
-5. **Subsumed prompts.** The original standalone files `1_pressure_test_idea.md`, `2_validate_the_real_problem.md`, `3_map_your_real_competition.md` are now threaded inside Stage A. Do not invoke them separately when this skill is active. Files `4_find_your_first_10_customers.md` and `5_build_your_mvp_in_2_weeks.md` remain as standalone GTM aids that run alongside or after Stage D.
+Stage A must evaluate every idea through these lenses:
 
-## What lives where
+- User value: painkiller vs vitamin, named personas, frequency, current
+  workaround, emotional intensity, and pull vs push demand.
+- Wallet-opening point: whether the problem is compelling enough that the user
+  would pay money, spend time, tolerate ads, or accept friction to get it solved.
+- Instinctive demand: whether the product touches social approval, freedom, or
+  both in the actual product experience.
+- Feasibility: technical risk, resource risk, dependencies, legal/compliance
+  risk, and time-to-value.
+- Differentiation: new capability, 10x improvement, new audience, new context,
+  dramatically better UX, or cheaper only as a weak fallback.
+- Assumption audit: Must Be True, Should Be True, Might Be True.
+- MVP scoping: one job done well, riskiest assumption first, time-boxed scope,
+  default 2-week MVP time-box, mandatory Not Doing list.
 
-```
-ideator/
-├── SKILL.md                          (this file — entry point)
-├── references/
-│   ├── 0_orchestrator.md             (master pipeline rules + gate logic)
-│   ├── A_business_analyzer.md        (Stage A driver — PG triple-threat evaluator)
-│   ├── B_brainstorm_bridge.md        (Stage B driver — context handoff to brainstorming)
-│   └── C_bd_task_writer.md           (Stage C driver — PRD + architecture → task graph manifest + create-task ingestion)
-```
+## Optional task generation
 
-## External dependencies
-
-- **brainstorming skill** — Stage B uses it. If not installed, Stage B becomes a manual design interview using the same required architecture output.
-- **create-task skill** — Stage C uses it to create every epic/task listed in `docs/task_only_for_reference.md`. Stage C does not embed task-tracker manuals; dedicated task-execution skills own those instructions.
+When the user asks to turn the approved PRD and architecture into tasks, read
+`references/D_task_planner.md` and use the `create-task` skill format. Task
+generation must create one epic per capability and independently executable
+`T-###` tasks with concrete PRD refs, architecture refs, scenarios, allowed
+files, forbidden files, verification commands, and out-of-scope guards.
+If `create-task` is unavailable, fail the optional task generation step instead
+of producing partial task artifacts.
 
 ## Starter prompt
 
-When the skill triggers and no state files exist, ask the user exactly:
+When no state files exist, ask exactly:
 
-> "Ready to begin Stage A (Business Analysis)? I need (1) your one-line idea and (2) the target customer."
+> Ready to begin Stage A (Business Analysis)? I need (1) your one-line idea and (2) the target customer.
 
-Wait for both answers before starting Phase 1 of Stage A.
-
-## Why this exists
-
-A raw idea typically dies for one of three reasons: nobody actually has the problem (vitamin not painkiller), an entrenched current behavior beats the new product, or the founder cannot specifically address the fatal flaws. Stage A surfaces all three before any code is written. Stage B turns the validated pain into a production-MVP architecture with explicit operational boundaries. Stage C synthesizes the implementation-facing PRD, produces the task manifest, and delegates tracker creation to `create-task`. The hard gates exist because skipping ahead is the failure mode: premature implementation is the most common reason early ideas fail.
+Wait for both answers before starting Stage A.
