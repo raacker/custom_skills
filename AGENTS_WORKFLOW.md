@@ -1,21 +1,46 @@
-## Workflow
+## How to work on tasks
 
-### Reference Documents
+By using helpful tools, associates tasks with detailed descriptions and get tasks done in the most efficient way. If it is not efficient enough, always suggest how to improve.
+
+### Grossaries
+
+- bd: beads. Task management system.
+- crg: code-review-graph. Better code analyzation tool.
+- scripts/verify.sh: verification and lint tool.
+
+### Mandatory Workflow
+
+1. **Check ready work**: Run `bd ready`
+2. **Claim available work and read description**: Clame it and get the task description by `bd update <id> --claim --json`
+3. **Run quality gates**: Before mark the task done, run `scripts/verify.sh` and fix failures. Do not separately run test, analyze, lint.
+4. **Update issue status** - `bd close <id> --reason "Completed"`
+5. **Commit** - create a commit.
+
+### Workflow Rules
+
+- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
+- Do not use `--json` argument for `bd` unless you need detailed descriptions.
+- Prefer `crg` results before Grep/Glob/Read for repository exploration.
+- Keep `crg` queries focused on the current task.
+- If `crg` output is empty, verify with local files.
+- Use `git diff --stat` before full diffs. Inspect full diffs only for touched files or when the stat suggests unexpected churn.
+
+### Reference Documents if required
 
 - Read `docs/prd.md` for product requirements, MVP scope, acceptance signals, and scenario definitions.
 - Read `docs/architecture.md` for technical design, component boundaries, data flow, error handling, and testing strategy before changing implementation structure.
 - Read `docs/business_analysis.md` for customer pain, validation criteria, fatal flaws, differentiation, and out-of-scope constraints when product scope is unclear.
-- Use `task_only_for_reference.md` only as a traceability snapshot. bd is the source of truth for task status and execution instructions.
+- Use `task_only_for_reference.md` only as a traceability snapshot. 
 
 ### bd(beads) manual
 
 #### bd(beads) reference
 
 ```bash
-bd ready --json                 # Find available work
+bd ready                        # Find available work
 bd show <id> --json             # View issue details
-bd update <id> --claim --json   # Claim work
-bd close <id> --json            # Complete work
+bd update <id> --claim          # Claim work
+bd close <id>                   # Complete work
 bd prime --json                 # Detailed command reference and session close protocol
 bd remember --json              # For persistent knowledge
 ```
@@ -59,29 +84,4 @@ bd remember --json              # For persistent knowledge
 4. For tests, use `query_graph` with the `tests_for` pattern before raw search.
 5. If graph tools fail or return no useful data, state the fallback briefly and
    use `rg`, file reads, or other local inspection as needed.
-
-### Workflow Rules
-
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
-- Use `--json` for bd commands.
-- Keep bd commands sequential; embedded bd/Dolt can lock on concurrent writers.
-- Prefer graph results before Grep/Glob/Read for repository exploration.
-- Keep graph queries focused on the current task.
-- Do not treat graph output as authoritative when it is empty or stale; verify
-  with local files when needed.
-
-
-### Session Completion
-
-**MANDATORY WORKFLOW:**
-
-1. **Check ready work** - `bd ready --json`
-2. **Sort ready tasks** by priority.
-3. **Inspect and claim** - Inspect with `bd show <id> --json` and claim it by `bd update <id> --claim --json`
-4. **Run quality gates** (if code changed) - Run `script/verify.sh` if exists. Fallback to do tests, linters, builds
-5. **Update issue status** - `bd close <id> --reason "Completed" --json`
-6. **Commit** - create a commit.
-7. **Verify** - All changes committed AND pushed
-8. **Hand off** - Provide context for next session
-
 
